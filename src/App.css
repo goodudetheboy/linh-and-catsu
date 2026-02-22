@@ -5,8 +5,7 @@
 }
 
 body {
-  overflow: hidden;
-  touch-action: none;
+  touch-action: pan-y;
   background: #F9E8D9;
 }
 

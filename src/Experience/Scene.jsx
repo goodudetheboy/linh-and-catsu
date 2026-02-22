@@ -1,19 +1,21 @@
 import { Suspense } from "react";
 import CustomCamera from "./components/CustomCamera";
-import MovingCat from "./models/MovingCat";
-import Scene_Ri from "./models/Scene_Ri";
-import Scene_Rua from "./models/Scene_Rua";
-import Scene_Bigga from "./models/Scene_Bigga";
+import Characters from "./models/Characters";
+import Winter from "./models/Scene_1_Winter";
+import Spring from "./models/Scene_2_Spring";
+import Summer from "./models/Scene_3_Summer";
+import Fall from "./models/Scene_4_Fall";
 
 const Scene = () => {
   return (
     <>
       <CustomCamera />
       <Suspense fallback={null}>
-        <MovingCat />
-        <Scene_Ri />
-        <Scene_Rua />
-        <Scene_Bigga />
+        <Characters />
+        <Winter />
+        <Spring />
+        <Summer />
+        <Fall />
       </Suspense>
     </>
   );
