@@ -17,6 +17,23 @@ A scrapbook-aesthetic website for Linh to store photos of her three cats (Rua, R
 
 ---
 
+## Art Style
+
+Characters follow a **kawaii sticker** aesthetic — squircle bodies, thick white bezel (die-cut sticker effect), muted lo-fi palette with subtle paper-grain texture. Defined in `art-style.md`.
+
+### Character assets
+
+All assets live in `public/assets/characters/`. They are PNG stickers with transparent backgrounds.
+
+| File | Character |
+|------|-----------|
+| `linh.png` | Linh — girl with round glasses, bob haircut, white shirt |
+| `rua.png` | Rua — standing grey Scottish Fold |
+| `ri.png` | RI — sitting grey Scottish Fold, round loaf pose |
+| `bigga.png` | Bigga — brown tabby, loaf/lying pose |
+
+---
+
 ## Fixed Canvas System
 
 **Every room is a 1600 × 900 px canvas** (16:9). All furniture positions are stored as `x%` / `y%` of this canvas. This is the single source of truth for layout — it never changes regardless of screen size.
@@ -104,13 +121,55 @@ Linh is **`position: fixed`**, rendered in `RoomWorld` as a single instance — 
 
 **Size and position are derived entirely from canvas metrics:**
 ```typescript
-linhW     = 80  * scaleFactor          // scales with canvas
-linhH     = 160 * scaleFactor          // scales with canvas
+linhW     = 320 * scaleFactor          // scales with canvas
+linhH     = 560 * scaleFactor          // scales with canvas
 linhFeetY = canvasOffsetY + 0.88 * ROOM_HEIGHT * scaleFactor  // feet on canvas floor
 linhScreenX = (from useScrollEngine)   // horizontal, px from left
 ```
 
-The `Linh` component takes `{ screenX, screenY, width, height }` all in screen px.
+The `Linh` component takes `{ screenX, screenY, width, height }` all in screen px and renders `linh.png`.
+
+---
+
+## Cat Characters
+
+Each cat is an `<img>` sticker rendered inside the room canvas (absolute positioned). They share the `Cat` component which handles:
+- Bobbing animation (`bop-cat` keyframe)
+- Drop shadow to match the sticker art style
+- Optional `onClick` → when provided, the cat becomes a clickable trigger (cursor: pointer, hover scale)
+
+### Per-cat config — single source of truth in `src/data/cats.ts`
+
+```typescript
+{ slug: 'rua',   colorScheme: 'orange', displaySize: 0.82 }
+{ slug: 'ri',    colorScheme: 'grey',   displaySize: 0.70 }
+{ slug: 'bigga', colorScheme: 'tabby',  displaySize: 1.25 }
+```
+
+`displaySize` is a CSS `scale()` multiplier applied on top of the base 440×440 canvas-px image. Changing it in `cats.ts` updates both the welcome screen and each cat's individual room simultaneously.
+
+### Image mapping (`Cat.tsx`)
+
+```typescript
+orange → /assets/characters/rua.png
+grey   → /assets/characters/ri.png
+tabby  → /assets/characters/bigga.png
+```
+
+---
+
+## Photo Album (per cat room)
+
+Clicking a cat character opens their **photo album lightbox**. The state is managed in `CatRoom` (not inside `Room`) so the lightbox can be rendered as a sibling — avoiding `position: fixed` clipping caused by the room canvas's CSS `transform: scale()`.
+
+### DecorationLayer click-through
+`DecorationLayer` has `pointer-events: none` in view mode so it doesn't block clicks on characters or other interactive room elements. Individual `PlacedItem` descendants can opt back in with `pointer-events: auto`.
+
+### Lightbox (`Lightbox.tsx`)
+- **Grid view** — all photos in a 3-column polaroid grid. Thumbnails lift and zoom on hover.
+- **Full-screen viewer** — click any photo to open it. Polaroid-style framed photo with washi tape accent, caption, photo counter, ← → navigation arrows, keyboard shortcuts (←/→ navigate, Esc close).
+- **Upload** — auth-only "Add photos" button. Accepts multiple files, uploads to Supabase Storage.
+- **Delete** — auth-only ✕ button appears on thumbnail hover.
 
 ---
 
@@ -174,18 +233,20 @@ src/
     rooms/
       RoomWorld.tsx        ← top-level: zoom state, world strip, single Linh
       Room.tsx             ← 3D CSS diorama shell + DnD context + edit button
-      DecorationLayer.tsx  ← 2D overlay with placed items
-      WelcomeRoom.tsx / CatRoom.tsx / TogetherRoom.tsx
+      DecorationLayer.tsx  ← 2D overlay with placed items (pointer-events:none in view mode)
+      WelcomeRoom.tsx      ← room 0: all three cats displayed, sizes from CATS data
+      CatRoom.tsx          ← rooms 1–3: cat clickable → lightbox
+      TogetherRoom.tsx     ← room 4
     builder/
       FurniturePanel.tsx   ← slide-up drawer, categorized items
       FurnitureCard.tsx    ← draggable thumbnail from panel
       PlacedItem.tsx       ← item in room with move/rotate/resize/delete handles
       BuilderToolbar.tsx   ← Save / Cancel bar
     characters/
-      Linh.tsx             ← fixed overlay, takes { screenX, screenY, width, height }
-      Cat.tsx              ← absolute inside canvas, bobbing animation
+      Linh.tsx             ← fixed overlay, renders linh.png, takes { screenX, screenY, width, height }
+      Cat.tsx              ← absolute inside canvas, renders sticker PNG, bobbing animation, optional onClick
     gallery/
-      Lightbox.tsx         ← photo grid + upload modal
+      Lightbox.tsx         ← grid view + full-screen viewer + upload/delete
     ui/
       WashiTape.tsx        ← decorative tape accent (color, angle props)
       RoomIndicator.tsx    ← dot nav
@@ -203,11 +264,15 @@ src/
   data/
     constants.ts           ← ROOM_WIDTH, ROOM_HEIGHT, LINH_*_PX positions
     rooms.ts               ← RoomConfig[] array
-    cats.ts                ← Cat[] metadata
+    cats.ts                ← Cat[] metadata incl. colorScheme + displaySize (single source of truth)
     furniture.ts           ← FurnitureItem[] catalog
   styles/
-    animations.css         ← bop, tail-wag, ear-twitch, slide-up, pop-in keyframes
+    animations.css         ← bop, tail-wag, ear-twitch, slide-up, pop-in, book-open/close, album-float
   index.css                ← design tokens (CSS vars), paper texture, base reset
+public/
+  assets/
+    characters/            ← linh.png, rua.png, ri.png, bigga.png
+    furniture/             ← 28 SVG furniture items
 ```
 
 ---
@@ -230,11 +295,12 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [x] Camera follow on narrow screens
 - [x] Zoom slider (0.35×–2.0×) with smooth GSAP tween, camera respects zoom
 - [x] Outside-room cute polka-dot background + room frame border
-- [x] Linh placeholder character (fixed overlay, scales with canvas)
-- [x] Cat placeholder characters (3 color schemes, bobbing animations)
+- [x] Linh character — real sticker art (`linh.png`), fixed overlay, scales with canvas
+- [x] Cat characters — real sticker art per cat, bobbing animation, click to open photos
+- [x] Per-cat `displaySize` in `cats.ts` — single source of truth for welcome + cat rooms
 - [x] Room builder (drag-drop, move/rotate/resize/z-order, save to Supabase)
 - [x] Furniture catalog (28 items, placeholder SVGs)
-- [x] Photo gallery (Lightbox, upload, delete, Supabase storage)
+- [x] Photo album lightbox — grid, full-screen viewer, ←/→ navigation, upload, delete
 - [x] Supabase auth (password-only login modal)
 - [x] Room indicator dots
 - [x] Supabase SQL setup script (`supabase-setup.sql`)
@@ -244,7 +310,6 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [ ] Fill in Supabase `.env` values and run `supabase-setup.sql`
 - [ ] Design each room individually (colors, decor, mood)
 - [ ] Replace placeholder SVG furniture with real stylized art assets
-- [ ] Replace placeholder Linh/Cat SVGs with real character art
 - [ ] Custom welcome room design (title, intro feel)
 - [ ] Decide on room 5 ("Together") purpose
 - [ ] Polish: loading states, error handling, mobile touch handle sizes

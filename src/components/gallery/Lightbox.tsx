@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { usePhotos } from '../../hooks/usePhotos'
 import { useAuth } from '../../hooks/useAuth'
 import { WashiTape } from '../ui/WashiTape'
@@ -41,7 +42,10 @@ export function Lightbox({ catSlug, catName, accentColor, onClose }: LightboxPro
 
   const viewedPhoto = viewIndex != null ? photos[viewIndex] : null
 
-  return (
+  /* Portal to document.body so position:fixed is relative to the viewport,
+     not the worldRef div (which has willChange:transform — a known CSS gotcha
+     that turns transformed ancestors into the containing block for fixed els). */
+  return createPortal(
     <>
       {/* ── Album panel ─────────────────────────────────────────── */}
       <div
@@ -308,6 +312,7 @@ export function Lightbox({ catSlug, catName, accentColor, onClose }: LightboxPro
           )}
         </div>
       )}
-    </>
+    </>,
+    document.body,
   )
 }
