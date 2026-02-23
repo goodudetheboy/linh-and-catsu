@@ -115,13 +115,39 @@ export function useScrollEngine(totalRooms: number, suspended: boolean, userZoom
       moveFromDelta(e.deltaY * 0.85)
     }
 
+    let touchStartX = 0
     let touchStartY = 0
-    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY }
-    const onTouchMove  = (e: TouchEvent) => {
-      e.preventDefault()
-      const dy = (touchStartY - e.touches[0].clientY) * 1.5
+    let touchAxis: 'x' | 'y' | null = null
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX
       touchStartY = e.touches[0].clientY
-      moveFromDelta(dy)
+      touchAxis   = null
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      const curX = e.touches[0].clientX
+      const curY = e.touches[0].clientY
+
+      // Lock to whichever axis moves first past the threshold
+      if (!touchAxis) {
+        const dx = Math.abs(touchStartX - curX)
+        const dy = Math.abs(touchStartY - curY)
+        if (dx < 6 && dy < 6) return
+        touchAxis = dx >= dy ? 'x' : 'y'
+      }
+
+      e.preventDefault()
+
+      if (touchAxis === 'x') {
+        const delta = (touchStartX - curX) * 1.5
+        touchStartX = curX
+        moveFromDelta(delta)
+      } else {
+        const delta = (touchStartY - curY) * 1.5
+        touchStartY = curY
+        moveFromDelta(delta)
+      }
     }
 
     const onResize = () => applyPositions(currentRoomRef.current, linhPxRef.current)
