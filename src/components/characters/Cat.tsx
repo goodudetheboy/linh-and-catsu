@@ -12,7 +12,8 @@ const IMAGE_SRC: Record<ColorScheme, string> = {
 
 interface CatProps {
   colorScheme?: ColorScheme
-  x?:          number       // % of room width
+  x?:          number       // % of room width  (left edge reference)
+  y?:          number       // % from room bottom (where feet sit)
   delay?:      string       // animation delay CSS value
   size?:       number       // scale multiplier
   className?:  string
@@ -22,6 +23,7 @@ interface CatProps {
 export function Cat({
   colorScheme = 'orange',
   x = 50,
+  y = 10,
   delay = '0s',
   size = 1,
   className = '',
@@ -31,9 +33,10 @@ export function Cat({
 
   return (
     <div
-      className={`absolute bottom-[18%] z-20 ${className}`}
+      className={`absolute z-20 ${className}`}
       style={{
         left:            `${x}%`,
+        bottom:          `${y}%`,
         transform:       `translateX(-50%) scale(${size})`,
         transformOrigin: 'bottom center',
         pointerEvents:   onClick ? 'auto' : 'none',

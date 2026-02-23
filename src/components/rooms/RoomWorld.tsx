@@ -14,8 +14,8 @@ import { TogetherRoom } from './TogetherRoom'
 // Linh's natural dimensions on the room canvas at scale 1
 const LINH_NATURAL_W = 320
 const LINH_NATURAL_H = 560
-// Her feet sit at this fraction from the canvas top (= 1 - 0.18 floor offset - half character)
-const LINH_FEET_Y_FRAC = 0.88
+// Her feet sit at this fraction from the canvas top (aligned to the visual floor junction)
+const LINH_FEET_Y_FRAC = 1.1
 
 const MIN_ZOOM = 0.35
 const MAX_ZOOM = 2.0

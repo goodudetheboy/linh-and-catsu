@@ -9,11 +9,17 @@ interface WelcomeRoomProps {
   onEditStateChange?: (editing: boolean) => void
 }
 
-/* X positions for the three cats on the welcome screen */
+/* Per-cat positions on the welcome screen — edit these to move cats individually */
 const WELCOME_X: Record<string, number> = {
   rua:   28,
   ri:    58,
   bigga: 72,
+}
+
+const WELCOME_Y: Record<string, number> = {
+  rua:   -2,
+  ri:    -5,
+  bigga: -11,
 }
 
 const WELCOME_DELAY: Record<string, string> = {
@@ -80,6 +86,7 @@ export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
           colorScheme={cat.colorScheme}
           size={cat.displaySize}
           x={WELCOME_X[cat.slug] ?? 50}
+          y={WELCOME_Y[cat.slug] ?? 10}
           delay={WELCOME_DELAY[cat.slug] ?? '0s'}
         />
       ))}

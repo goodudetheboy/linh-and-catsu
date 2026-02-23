@@ -138,6 +138,27 @@ Each cat is an `<img>` sticker rendered inside the room canvas (absolute positio
 - Drop shadow to match the sticker art style
 - Optional `onClick` → when provided, the cat becomes a clickable trigger (cursor: pointer, hover scale)
 
+### Cat props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `x` | `number` | `50` | Horizontal position as % of room width (center anchor) |
+| `y` | `number` | `10` | Vertical position as % from room bottom (feet anchor) |
+| `size` | `number` | `1` | Scale multiplier on top of the base 440×440 image |
+| `delay` | `string` | `'0s'` | CSS animation delay for the bop cycle |
+| `onClick` | `() => void` | — | Makes the cat interactive (opens photo album) |
+
+### Welcome room per-cat positions (`WelcomeRoom.tsx`)
+
+`WELCOME_X`, `WELCOME_Y`, and `WELCOME_DELAY` records let you move each cat independently without touching the others:
+
+```typescript
+const WELCOME_X: Record<string, number> = { rua: 28, ri: 58, bigga: 72 }
+const WELCOME_Y: Record<string, number> = { rua: 10, ri: 10, bigga: 10 }
+```
+
+Edit `WELCOME_Y[slug]` to raise (`20`) or lower (`5`) a single cat on the welcome screen.
+
 ### Per-cat config — single source of truth in `src/data/cats.ts`
 
 ```typescript
@@ -308,6 +329,9 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [x] Login-from-lightbox — "Login to add photos" button inside the album panel opens auth modal
 - [x] Mobile horizontal swipe — touch axis locked after 6 px; X-axis swipe navigates rooms, Y-axis walks Linh
 - [x] Custom favicon (`public/icon.png`)
+- [x] `Cat` component `y` prop — per-cat vertical position (% from bottom); welcome room uses `WELCOME_Y` record
+- [x] Room content lifted out of `preserve-3d` scene into a flat 2D overlay — fixes floor z-fighting with characters
+- [x] Room label card fixed (`position: absolute` inline style) — was stretching full-width due to `.paper-card { position: relative }` overriding Tailwind's `absolute` class
 
 ## What's Left
 

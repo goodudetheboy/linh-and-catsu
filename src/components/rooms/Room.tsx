@@ -143,7 +143,7 @@ export function Room({ config, zoom = 1, children, onEditStateChange }: RoomProp
               overflow: 'hidden',
             }}
           >
-            {/* 3D scene */}
+            {/* 3D scene — walls & floor only, no content here to avoid z-fighting */}
             <div
               style={{
                 width: '100%', height: '100%',
@@ -179,25 +179,25 @@ export function Room({ config, zoom = 1, children, onEditStateChange }: RoomProp
                 className="absolute top-0 right-0 bottom-0"
                 style={{ width: '12%', background: config.wallColor, filter: 'brightness(0.88)', transform: 'rotateY(-55deg)', transformOrigin: 'right center' }}
               />
-
-              {/* Room content */}
-              <div className="absolute inset-0">{children}</div>
-
-              {/* Decoration layer */}
-              <DecorationLayer
-                roomId={config.id}
-                items={builder.items.length ? builder.items : decorations}
-                isEditing={builder.isEditing}
-                selected={builder.selected}
-                onSelect={builder.setSelected}
-                onDeselect={() => builder.setSelected(null)}
-                onUpdate={builder.updateItem}
-                onDelete={builder.removeItem}
-                onForward={builder.bringForward}
-                onBackward={builder.sendBackward}
-                onFrameClick={(_item) => { /* lightbox per room */ }}
-              />
             </div>
+
+            {/* 2D content layer — sits above the 3D scene, no z-fighting with the floor */}
+            <div className="absolute inset-0" style={{ zIndex: 10 }}>{children}</div>
+
+            {/* Decoration layer */}
+            <DecorationLayer
+              roomId={config.id}
+              items={builder.items.length ? builder.items : decorations}
+              isEditing={builder.isEditing}
+              selected={builder.selected}
+              onSelect={builder.setSelected}
+              onDeselect={() => builder.setSelected(null)}
+              onUpdate={builder.updateItem}
+              onDelete={builder.removeItem}
+              onForward={builder.bringForward}
+              onBackward={builder.sendBackward}
+              onFrameClick={(_item) => { /* lightbox per room */ }}
+            />
           </div>
         </div>
 
