@@ -1,0 +1,69 @@
+/* ─── Character animations ──────────────────────────────────────── */
+@keyframes bop {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-6px) rotate(1deg); }
+}
+
+@keyframes bop-cat {
+  0%, 100% { transform: translateY(0px) rotate(1deg) scaleX(1); }
+  30%       { transform: translateY(-4px) rotate(-0.5deg) scaleX(1); }
+  60%       { transform: translateY(-2px) rotate(1.5deg) scaleX(1); }
+}
+
+@keyframes tail-wag {
+  0%, 100% { transform: rotate(-20deg); }
+  50%       { transform: rotate(20deg); }
+}
+
+@keyframes ear-twitch {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  88%            { transform: rotate(-8deg); }
+  92%            { transform: rotate(5deg); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%            { transform: scaleY(0.1); }
+}
+
+/* ─── UI animations ─────────────────────────────────────────────── */
+@keyframes float-sticker {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 3deg)); }
+  50%       { transform: translateY(-4px) rotate(calc(var(--rot, 3deg) + 2deg)); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(100%); opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pop-in {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes room-scroll-hint {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50%       { transform: translateY(6px); opacity: 1; }
+}
+
+/* ─── Utility classes ───────────────────────────────────────────── */
+.animate-bop       { animation: bop      2.4s ease-in-out infinite; }
+.animate-bop-cat   { animation: bop-cat  2.8s ease-in-out infinite; }
+.animate-float     { animation: float-sticker 3s ease-in-out infinite; }
+.animate-slide-up  { animation: slide-up  0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-slide-down{ animation: slide-down 0.25s ease-in forwards; }
+.animate-fade-in   { animation: fade-in  0.3s ease forwards; }
+.animate-pop-in    { animation: pop-in   0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-scroll-hint { animation: room-scroll-hint 1.4s ease-in-out infinite; }
