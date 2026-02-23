@@ -27,7 +27,7 @@ export const CATS: Cat[] = [
   {
     id:          'ri',
     slug:        'ri',
-    name:        'RI',
+    name:        'Ri',
     ageYears:    1.5,
     colorDesc:   'grey',
     roomOrder:   3,

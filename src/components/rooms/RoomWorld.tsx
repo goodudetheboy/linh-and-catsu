@@ -28,7 +28,7 @@ export function RoomWorld() {
   const [editingSuspended, setEditingSuspended] = useState(false)
 
   // Animated zoom — GSAP tweens between values, driving React state at 60fps
-  const initialZoom             = isMobileDevice() ? 0.5 : 1
+  const initialZoom             = isMobileDevice() ? 0.5 : 0.8
   const [zoom, setZoom]         = useState(initialZoom)
   const animZoomRef             = useRef(initialZoom)
   const zoomTweenRef            = useRef<gsap.core.Tween | null>(null)
@@ -81,7 +81,6 @@ export function RoomWorld() {
               roomIndex={idx}
               zoom={zoom}
               onEditStateChange={setEditingSuspended}
-              isActive={roomIndex === idx}
             />
           ))}
 

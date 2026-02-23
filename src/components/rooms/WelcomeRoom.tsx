@@ -20,7 +20,7 @@ const WELCOME_X: Record<string, number> = {
 // y = % from room bottom; -10 aligns cat feet with the visual floor (same level as Linh)
 const WELCOME_Y: Record<string, number> = {
   rua:   -10,
-  ri:    -10,
+  ri:    -7,   // sitting/loaf pose sits slightly higher so it clears the room border
   bigga: -10,
 }
 
@@ -45,6 +45,13 @@ const WELCOME_WANDER_SPEED: Record<string, number> = {
   rua:   3.5,
   ri:    2.8,
   bigga: 3.2,
+}
+
+// Cats whose images face the wrong way by default
+const WELCOME_FLIP: Record<string, boolean> = {
+  rua:   false,
+  ri:    true,
+  bigga: true,
 }
 
 export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
@@ -86,38 +93,57 @@ export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
         </p>
       </div>
 
-      {/* Wall-pinned navigation hint — adapts to desktop (scroll ↓) vs mobile (swipe ←) */}
+      {/* Navigation hint — pinned below the title card, centered on the wall */}
+      {/*
+        Centering trick: outer div is the float-animation anchor (no transform so the
+        animation isn't fighting with translateX). Inner div handles the centering + tilt.
+      */}
+      <div
+        className="animate-float"
+        style={{ position: 'absolute', top: '50%', left: '50%', zIndex: 30 }}
+      >
+        <div style={{ transform: 'translateX(-50%) rotate(-2deg)' }}>
+          {/* Tack pin */}
+          <div style={{
+            position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+            width: 18, height: 18, borderRadius: '50%',
+            background: 'var(--pink-deep)',
+            boxShadow: '0 2px 0 rgba(61,44,44,0.25)',
+          }} />
+          <div
+            className="paper-card px-8 py-5"
+            style={{ background: '#fffbe8', boxShadow: '2px 3px 0 rgba(61,44,44,0.12)' }}
+          >
+            <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 38, lineHeight: 1.3, textAlign: 'center' }}>
+              {isMobile ? 'swipe left' : 'scroll down'}
+            </p>
+            <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)', fontSize: 44, fontWeight: 700, textAlign: 'center', marginTop: 4 }}>
+              {isMobile ? 'to explore →' : 'to explore ↓'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Decorative arrow — right side of wall pointing right.
+          The PNG is a left arrow, so we rotate the INNER img 180°.
+          The outer div handles the float animation independently so the
+          animation transform doesn't clobber the rotation. */}
       <div
         className="animate-float"
         style={{
-          position:  'absolute',
-          right:     '6%',
-          top:       '52%',
-          zIndex:    30,
-          transform: 'rotate(3deg)',
+          position:       'absolute',
+          right:          '4%',
+          top:            '48%',
+          zIndex:         30,
+          animationDelay: '0.6s',
         }}
       >
-        {/* Tack pin */}
-        <div style={{
-          position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-          width: 18, height: 18, borderRadius: '50%',
-          background: 'var(--pink-deep)',
-          boxShadow: '0 2px 0 rgba(61,44,44,0.25)',
-        }} />
-        <div
-          className="paper-card px-8 py-5"
-          style={{
-            background: '#fffbe8',
-            boxShadow: '2px 3px 0 rgba(61,44,44,0.12)',
-          }}
-        >
-          <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 38, lineHeight: 1.3, textAlign: 'center' }}>
-            {isMobile ? 'swipe left' : 'scroll down'}
-          </p>
-          <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)', fontSize: 44, fontWeight: 700, textAlign: 'center', marginTop: 4 }}>
-            {isMobile ? 'to explore →' : 'to explore ↓'}
-          </p>
-        </div>
+        <img
+          src="/assets/misc/left-arrow-pink-no-bg.png"
+          alt=""
+          draggable={false}
+          style={{ width: 160, height: 'auto', display: 'block', transform: 'rotate(180deg)' }}
+        />
       </div>
 
       {/* Cats — sizes/schemes come from CATS data, so one place to edit */}
@@ -129,6 +155,7 @@ export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
           x={WELCOME_X[cat.slug] ?? 50}
           y={WELCOME_Y[cat.slug] ?? -10}
           delay={WELCOME_DELAY[cat.slug] ?? '0s'}
+          flipX={WELCOME_FLIP[cat.slug] ?? false}
           wander
           wanderMin={WELCOME_WANDER_MIN[cat.slug]}
           wanderMax={WELCOME_WANDER_MAX[cat.slug]}

@@ -16,7 +16,7 @@ create table if not exists public.cats (
 -- Seed the three cats
 insert into public.cats (slug, name, age_years, color_desc, room_order) values
   ('rua',   'Rua',   5,   'orange tabby',      2),
-  ('ri',    'RI',    1.5, 'grey',               3),
+  ('ri',    'Ri',    1.5, 'grey',               3),
   ('bigga', 'Bigga', 2.5, 'grey/brown tabby',   4)
 on conflict (slug) do nothing;
 

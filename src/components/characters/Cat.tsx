@@ -20,6 +20,7 @@ interface CatProps {
   size?:         number       // scale multiplier
   className?:    string
   onClick?:      () => void   // makes the cat clickable
+  flipX?:        boolean      // start facing left instead of right
   wander?:       boolean      // enable horizontal wandering
   wanderMin?:    number       // left bound, % of room width
   wanderMax?:    number       // right bound, % of room width
@@ -34,6 +35,7 @@ export function Cat({
   size         = 1,
   className    = '',
   onClick,
+  flipX        = false,
   wander       = false,
   wanderMin,
   wanderMax,
@@ -44,12 +46,12 @@ export function Cat({
   const maxX = wanderMax ?? Math.min(95, x + 15)
 
   // Wander state — refs drive the rAF loop, state drives React render
-  const dirRef      = useRef(1)                  // 1 = right, -1 = left
+  const dirRef      = useRef(flipX ? -1 : 1)     // 1 = right, -1 = left
   const posRef      = useRef(x)
   const lastTimeRef = useRef<number | null>(null)
 
   const [catX,       setCatX]       = useState(x)
-  const [facingLeft, setFacingLeft] = useState(false)
+  const [facingLeft, setFacingLeft] = useState(flipX)
 
   useEffect(() => {
     if (!wander) return

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { Room } from './Room'
 import { Cat } from '../characters/Cat'
 import { WashiTape } from '../ui/WashiTape'
@@ -11,42 +11,21 @@ interface CatRoomProps {
   roomIndex: number
   zoom?: number
   onEditStateChange?: (editing: boolean) => void
-  isActive?: boolean
 }
 
-export function CatRoom({ roomIndex, zoom, onEditStateChange, isActive = false }: CatRoomProps) {
+export function CatRoom({ roomIndex, zoom, onEditStateChange }: CatRoomProps) {
   const config = ROOMS[roomIndex]
   const cat    = getCatBySlug(config.catSlug ?? '') as CatType | null
   const [lightboxOpen, setLightboxOpen] = useState(false)
 
-  // Meow once on entry, then randomly every 10–20 s while the room is visible
-  useEffect(() => {
-    if (!isActive || !cat) return
-
-    const audio = new Audio(`/assets/sound/${cat.slug}-meow.mp3`)
-    audio.volume = 0.6
-
-    let timerId: ReturnType<typeof setTimeout>
-
-    const scheduleNext = () => {
-      const delay = (10 + Math.random() * 10) * 1000   // 10–20 s
-      timerId = setTimeout(() => {
-        audio.currentTime = 0
-        audio.play().catch(() => {})
-        scheduleNext()
-      }, delay)
+  const openAlbum = useCallback(() => {
+    if (cat) {
+      const audio = new Audio(`/assets/sound/${cat.slug}-meow.mp3`)
+      audio.volume = 0.6
+      audio.play().catch(() => {})
     }
-
-    // Play immediately on room entry, then keep scheduling
-    audio.play().catch(() => {})
-    scheduleNext()
-
-    return () => {
-      clearTimeout(timerId)
-      audio.pause()
-      audio.src = ''
-    }
-  }, [isActive, cat?.slug])
+    setLightboxOpen(true)
+  }, [cat])
 
   if (!cat) return null
 
@@ -79,6 +58,33 @@ export function CatRoom({ roomIndex, zoom, onEditStateChange, isActive = false }
           </p>
         </div>
 
+        {/* Pet-prompt sticky note — right side, opposite the room label */}
+        <div
+          className="animate-float"
+          style={{ position: 'absolute', top: '10%', right: '6%', zIndex: 30, animationDelay: '0.4s' }}
+        >
+          <div style={{ transform: 'rotate(3deg)' }}>
+            {/* Tack pin */}
+            <div style={{
+              position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)',
+              width: 16, height: 16, borderRadius: '50%',
+              background: config.accentColor,
+              boxShadow: '0 2px 0 rgba(61,44,44,0.22)',
+            }} />
+            <div
+              className="paper-card"
+              style={{ background: '#fffbe8', boxShadow: '2px 3px 0 rgba(61,44,44,0.12)', whiteSpace: 'nowrap', padding: '16px 48px' }}
+            >
+              <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 36, textAlign: 'center', lineHeight: 1.3 }}>
+                psst...
+              </p>
+              <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)', fontSize: 42, fontWeight: 700, textAlign: 'center', marginTop: 2 }}>
+                try petting {cat.name}!
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Click the cat to open their album */}
         <Cat
           colorScheme={cat.colorScheme}
@@ -86,11 +92,12 @@ export function CatRoom({ roomIndex, zoom, onEditStateChange, isActive = false }
           x={55}
           y={-10}
           delay="0s"
+          flipX={cat.slug === 'ri' || cat.slug === 'bigga'}
           wander
           wanderMin={20}
           wanderMax={80}
           wanderSpeed={3}
-          onClick={() => setLightboxOpen(true)}
+          onClick={openAlbum}
         />
       </Room>
 

@@ -1,6 +1,6 @@
 # Linh & Catsu — Architecture Spec
 
-A scrapbook-aesthetic website for Linh to store photos of her three cats (Rua, RI, Bigga) and decorate rooms with drag-and-drop furniture. Built with Vite + React + TypeScript, deployed to Vercel, backed by Supabase.
+A scrapbook-aesthetic website for Linh to store photos of her three cats (Rua, Ri, Bigga) and decorate rooms with drag-and-drop furniture. Built with Vite + React + TypeScript, deployed to Vercel, backed by Supabase.
 
 ---
 
@@ -29,7 +29,7 @@ All assets live in `public/assets/characters/`. They are PNG stickers with trans
 |------|-----------|
 | `linh.png` | Linh — girl with round glasses, bob haircut, white shirt |
 | `rua.png` | Rua — standing grey Scottish Fold |
-| `ri.png` | RI — sitting grey Scottish Fold, round loaf pose |
+| `ri.png` | Ri — sitting grey Scottish Fold, round loaf pose |
 | `bigga.png` | Bigga — brown tabby, loaf/lying pose |
 
 ---
@@ -238,7 +238,7 @@ Run `supabase-setup.sql` in Supabase SQL editor.
 |-------|----|-------|-----|
 | 0 | `welcome` | Linh & Catsu | — |
 | 1 | `rua` | Rua's Room | Rua (5yr, orange tabby) |
-| 2 | `ri` | RI's Room | RI (1.5yr, grey) |
+| 2 | `ri` | Ri's Room | Ri (1.5yr, grey) |
 | 3 | `bigga` | Bigga's Room | Bigga (2.5yr, grey/brown tabby) |
 | 4 | `together` | Together | — |
 

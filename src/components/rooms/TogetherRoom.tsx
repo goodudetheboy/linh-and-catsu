@@ -29,7 +29,7 @@ export function TogetherRoom({ zoom, onEditStateChange }: TogetherRoomProps) {
           className="text-center text-lg mt-1"
           style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)' }}
         >
-          Linh, Rua, RI &amp; Bigga
+          Linh, Rua, Ri &amp; Bigga
         </p>
       </div>
 
