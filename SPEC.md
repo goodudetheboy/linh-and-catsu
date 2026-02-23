@@ -304,10 +304,13 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [x] Supabase auth (password-only login modal)
 - [x] Room indicator dots
 - [x] Supabase SQL setup script (`supabase-setup.sql`)
+- [x] Upload confirmation — preview selected photos before committing upload
+- [x] Login-from-lightbox — "Login to add photos" button inside the album panel opens auth modal
+- [x] Mobile horizontal swipe — touch axis locked after 6 px; X-axis swipe navigates rooms, Y-axis walks Linh
+- [x] Custom favicon (`public/icon.png`)
 
 ## What's Left
 
-- [ ] Fill in Supabase `.env` values and run `supabase-setup.sql`
 - [ ] Design each room individually (colors, decor, mood)
 - [ ] Replace placeholder SVG furniture with real stylized art assets
 - [ ] Custom welcome room design (title, intro feel)

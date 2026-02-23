@@ -29,40 +29,45 @@ export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
     <Room config={config} zoom={zoom} onEditStateChange={onEditStateChange}>
       {/* Title card */}
       <div
-        className="absolute top-[12%] left-1/2 -translate-x-1/2 paper-card px-10 py-5 paper-card--tilted-l"
+        className="paper-card px-12 py-6"
         style={{
+          position:  'absolute',
+          top:       '12%',
+          left:      '50%',
+          transform: 'translateX(-50%) rotate(-1.5deg)',
           background: 'white',
           boxShadow: '4px 5px 0 rgba(61,44,44,0.13)',
           zIndex: 30,
+          whiteSpace: 'nowrap',
         }}
       >
-        <WashiTape color="#f9c6d0" width={90}  angle={-8} style={{ top: -12, left: 15 }} />
-        <WashiTape color="#d5c8f0" width={70}  angle={6}  style={{ top: -10, right: 20 }} />
+        <WashiTape color="#f9c6d0" width={120} angle={-8} style={{ top: -14, left: 20 }} />
+        <WashiTape color="#d5c8f0" width={90}  angle={6}  style={{ top: -12, right: 25 }} />
         <h1
-          className="text-5xl font-bold text-center whitespace-nowrap"
-          style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)' }}
+          className="font-bold text-center"
+          style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)', fontSize: 110 }}
         >
           Linh &amp; Catsu 🐱
         </h1>
         <p
-          className="text-center text-lg mt-1"
-          style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)' }}
+          className="text-center"
+          style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 52, marginTop: 6 }}
         >
-          a little home for three very good cats
+          Home Sweetsu Home
         </p>
       </div>
 
       {/* Scroll hint */}
       <div
-        className="absolute bottom-[10%] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-scroll-hint"
-        style={{ zIndex: 30 }}
+        className="flex flex-col items-center gap-3 animate-scroll-hint"
+        style={{ position: 'absolute', bottom: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 30 }}
       >
-        <span style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 14 }}>
+        <span style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 36 }}>
           scroll to explore
         </span>
         <div
-          className="w-6 h-6 rounded-full border-2 flex items-center justify-center"
-          style={{ borderColor: 'var(--pink-deep)', color: 'var(--pink-deep)' }}
+          className="rounded-full border-4 flex items-center justify-center"
+          style={{ width: 52, height: 52, borderColor: 'var(--pink-deep)', color: 'var(--pink-deep)', fontSize: 28 }}
         >
           ↓
         </div>

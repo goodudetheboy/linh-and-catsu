@@ -25,19 +25,25 @@ export function CatRoom({ roomIndex, zoom, onEditStateChange }: CatRoomProps) {
       <Room config={config} zoom={zoom} onEditStateChange={onEditStateChange}>
         {/* Room label */}
         <div
-          className="absolute top-[10%] left-[8%] paper-card px-6 py-3 paper-card--tilted-l"
-          style={{ zIndex: 30, boxShadow: '3px 4px 0 rgba(61,44,44,0.12)' }}
+          className="paper-card paper-card--tilted-l px-8 py-4"
+          style={{
+            position: 'absolute',
+            top: '10%',
+            left: '8%',
+            zIndex: 30,
+            boxShadow: '3px 4px 0 rgba(61,44,44,0.12)',
+          }}
         >
-          <WashiTape color={config.accentColor} width={80} angle={-6} style={{ top: -11, left: 10 }} />
+          <WashiTape color={config.accentColor} width={90} angle={-6} style={{ top: -11, left: 10 }} />
           <h2
-            className="text-3xl font-bold"
-            style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)' }}
+            className="font-bold"
+            style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)', fontSize: 96 }}
           >
             {config.label} 🐾
           </h2>
           <p
-            className="text-sm mt-0.5"
-            style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)' }}
+            className="mt-2"
+            style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 48 }}
           >
             {cat.ageYears} years old · {cat.colorDesc}
           </p>
