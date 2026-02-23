@@ -256,9 +256,21 @@ Run `supabase-setup.sql` in Supabase SQL editor.
 | 1 | `rua` | Rua's Room | Rua (5yr, orange tabby) |
 | 2 | `ri` | Ri's Room | Ri (1.5yr, grey) |
 | 3 | `bigga` | Bigga's Room | Bigga (2.5yr, grey/brown tabby) |
-| 4 | `together` | Together | — |
+| 4 | `together` | Together | All three cats + Vuong |
 
 Room palettes defined in `src/data/rooms.ts` (`RoomConfig[]`). Adding a new room = add one object to this array. Scroll engine picks up the count automatically.
+
+### Together room layout
+
+Vuong (`vuong.png`) stands at **x=56%** (slightly right of centre). When Linh is at mid-scroll (~50%) she appears right beside him — a natural "family photo" composition. The three cats are grouped around them:
+
+| Character | x% | Notes |
+|-----------|----|-------|
+| Rua | 20% | left side |
+| Ri | 34% | left-centre, facing left |
+| Linh | ~50% | scroll-driven fixed overlay |
+| Vuong | 56% | static, `animate-bop`, `bottom: -10%` |
+| Bigga | 74% | right side, facing left |
 
 ---
 
@@ -273,7 +285,7 @@ src/
       DecorationLayer.tsx  ← 2D overlay with placed items (pointer-events:none in view mode)
       WelcomeRoom.tsx      ← room 0: all three cats + nav hint sticky note + right-pointing arrow
       CatRoom.tsx          ← rooms 1–3: wandering cat + meow on click + lightbox + pet-prompt note
-      TogetherRoom.tsx     ← room 4
+      TogetherRoom.tsx     ← room 4: all cats + Vuong static character, "All together" title card
     builder/
       FurniturePanel.tsx   ← slide-up drawer, categorized items
       FurnitureCard.tsx    ← draggable thumbnail from panel
@@ -308,7 +320,7 @@ src/
   index.css                ← design tokens (CSS vars), paper texture, base reset
 public/
   assets/
-    characters/            ← linh.png, rua.png, ri.png, bigga.png
+    characters/            ← linh.png, rua.png, ri.png, bigga.png, vuong.png
     furniture/             ← 28 SVG furniture items
     sound/                 ← rua-meow.mp3, ri-meow.mp3, bigga-meow.mp3
     misc/                  ← left-arrow-pink-no-bg.png, left-arrow-green-no-bg.png
@@ -358,11 +370,11 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [x] Room label card fixed (`position: absolute` inline style) — was stretching full-width due to `.paper-card { position: relative }` overriding Tailwind's `absolute` class
 - [x] Welcome room navigation hint — sticky note below title ("scroll down / swipe left to explore"), desktop vs mobile text via `pointer: coarse` detection; right-pointing arrow graphic (`left-arrow-pink-no-bg.png` rotated 180°) on right wall
 - [x] Cat room pet-prompt — sticky note on right wall ("psst... try petting {Name}!") with tack pin in room accent color
+- [x] Together room — "All together 🌸" title card (canvas-scale inline styles, `whiteSpace: nowrap`); Vuong character (`vuong.png`) at x=56% with `animate-bop` + floor alignment; cats grouped tightly around the pair
 
 ## What's Left
 
 - [ ] Design each room individually (colors, decor, mood)
 - [ ] Replace placeholder SVG furniture with real stylized art assets
-- [ ] Decide on room 5 ("Together") purpose
 - [ ] Polish: loading states, error handling, mobile touch handle sizes
 - [ ] Deploy to Vercel
