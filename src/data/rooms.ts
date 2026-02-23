@@ -28,7 +28,7 @@ export const ROOMS: RoomConfig[] = [
   },
   {
     id: 'ri',
-    label: "RI's Room",
+    label: "Ri's Room",
     wallColor: '#eceaf8',
     wallPattern: 'grid',
     floorColor: '#d4cce8',

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Room } from './Room'
 import { Cat } from '../characters/Cat'
 import { WashiTape } from '../ui/WashiTape'
@@ -16,10 +17,11 @@ const WELCOME_X: Record<string, number> = {
   bigga: 72,
 }
 
+// y = % from room bottom; -10 aligns cat feet with the visual floor (same level as Linh)
 const WELCOME_Y: Record<string, number> = {
-  rua:   -2,
-  ri:    -5,
-  bigga: -11,
+  rua:   -10,
+  ri:    -10,
+  bigga: -10,
 }
 
 const WELCOME_DELAY: Record<string, string> = {
@@ -28,8 +30,29 @@ const WELCOME_DELAY: Record<string, string> = {
   bigga: '0.1s',
 }
 
+// Horizontal wander bounds per cat so they stay in their own zone
+const WELCOME_WANDER_MIN: Record<string, number> = {
+  rua:   13,
+  ri:    45,
+  bigga: 60,
+}
+const WELCOME_WANDER_MAX: Record<string, number> = {
+  rua:   43,
+  ri:    70,
+  bigga: 88,
+}
+const WELCOME_WANDER_SPEED: Record<string, number> = {
+  rua:   3.5,
+  ri:    2.8,
+  bigga: 3.2,
+}
+
 export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
   const config = ROOMS[0]
+  // Lazy-init so it reads window once on mount (no SSR concern — pure Vite SPA)
+  const [isMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+  )
 
   return (
     <Room config={config} zoom={zoom} onEditStateChange={onEditStateChange}>
@@ -63,19 +86,37 @@ export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
         </p>
       </div>
 
-      {/* Scroll hint */}
+      {/* Wall-pinned navigation hint — adapts to desktop (scroll ↓) vs mobile (swipe ←) */}
       <div
-        className="flex flex-col items-center gap-3 animate-scroll-hint"
-        style={{ position: 'absolute', bottom: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 30 }}
+        className="animate-float"
+        style={{
+          position:  'absolute',
+          right:     '6%',
+          top:       '52%',
+          zIndex:    30,
+          transform: 'rotate(3deg)',
+        }}
       >
-        <span style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 36 }}>
-          scroll to explore
-        </span>
+        {/* Tack pin */}
+        <div style={{
+          position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+          width: 18, height: 18, borderRadius: '50%',
+          background: 'var(--pink-deep)',
+          boxShadow: '0 2px 0 rgba(61,44,44,0.25)',
+        }} />
         <div
-          className="rounded-full border-4 flex items-center justify-center"
-          style={{ width: 52, height: 52, borderColor: 'var(--pink-deep)', color: 'var(--pink-deep)', fontSize: 28 }}
+          className="paper-card px-8 py-5"
+          style={{
+            background: '#fffbe8',
+            boxShadow: '2px 3px 0 rgba(61,44,44,0.12)',
+          }}
         >
-          ↓
+          <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink-light)', fontSize: 38, lineHeight: 1.3, textAlign: 'center' }}>
+            {isMobile ? 'swipe left' : 'scroll down'}
+          </p>
+          <p style={{ fontFamily: 'var(--font-hand)', color: 'var(--ink)', fontSize: 44, fontWeight: 700, textAlign: 'center', marginTop: 4 }}>
+            {isMobile ? 'to explore →' : 'to explore ↓'}
+          </p>
         </div>
       </div>
 
@@ -86,8 +127,12 @@ export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
           colorScheme={cat.colorScheme}
           size={cat.displaySize}
           x={WELCOME_X[cat.slug] ?? 50}
-          y={WELCOME_Y[cat.slug] ?? 10}
+          y={WELCOME_Y[cat.slug] ?? -10}
           delay={WELCOME_DELAY[cat.slug] ?? '0s'}
+          wander
+          wanderMin={WELCOME_WANDER_MIN[cat.slug]}
+          wanderMax={WELCOME_WANDER_MAX[cat.slug]}
+          wanderSpeed={WELCOME_WANDER_SPEED[cat.slug]}
         />
       ))}
     </Room>

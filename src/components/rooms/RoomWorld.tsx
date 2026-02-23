@@ -20,12 +20,17 @@ const LINH_FEET_Y_FRAC = 1.1
 const MIN_ZOOM = 0.35
 const MAX_ZOOM = 2.0
 
+// Coarse-pointer (touch) devices get a zoomed-out default so the whole room fits on screen
+const isMobileDevice = () =>
+  typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
 export function RoomWorld() {
   const [editingSuspended, setEditingSuspended] = useState(false)
 
   // Animated zoom — GSAP tweens between values, driving React state at 60fps
-  const [zoom, setZoom]         = useState(1)
-  const animZoomRef             = useRef(1)
+  const initialZoom             = isMobileDevice() ? 0.5 : 1
+  const [zoom, setZoom]         = useState(initialZoom)
+  const animZoomRef             = useRef(initialZoom)
   const zoomTweenRef            = useRef<gsap.core.Tween | null>(null)
 
   const handleZoomChange = (target: number) => {
@@ -76,6 +81,7 @@ export function RoomWorld() {
               roomIndex={idx}
               zoom={zoom}
               onEditStateChange={setEditingSuspended}
+              isActive={roomIndex === idx}
             />
           ))}
 

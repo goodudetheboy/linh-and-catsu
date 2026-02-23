@@ -68,6 +68,23 @@ export function Lightbox({ catSlug, catName, accentColor, onClose }: LightboxPro
 
   const viewedPhoto = viewIndex != null ? photos[viewIndex] : null
 
+  /* Delete from full-screen viewer */
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteViewed = useCallback(async () => {
+    if (viewedPhoto == null || viewIndex == null || deleting) return
+    setDeleting(true)
+    const isLast = viewIndex >= photos.length - 1
+    await deletePhoto(viewedPhoto)
+    setDeleting(false)
+    if (photos.length <= 1) {
+      setViewIndex(null)              // was the only photo — close viewer
+    } else if (isLast) {
+      setViewIndex(photos.length - 2) // was the last — step back
+    }
+    // otherwise viewIndex stays; next photo shifts into the same slot
+  }, [viewedPhoto, viewIndex, deleting, photos.length, deletePhoto])
+
   /* Portal to document.body so position:fixed is relative to the viewport,
      not the worldRef div (which has willChange:transform — a known CSS gotcha
      that turns transformed ancestors into the containing block for fixed els). */
@@ -448,6 +465,19 @@ export function Lightbox({ catSlug, catName, accentColor, onClose }: LightboxPro
             >
               ✕
             </button>
+
+            {/* Delete — auth only, mirrors close button on the opposite corner */}
+            {isAuthenticated && (
+              <button
+                onClick={handleDeleteViewed}
+                disabled={deleting}
+                className="absolute -top-4 -left-4 w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: 'var(--pink-deep)', color: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', zIndex: 10 }}
+                title="Delete this photo"
+              >
+                {deleting ? '…' : '🗑️'}
+              </button>
+            )}
           </div>
 
           {/* Prev / Next arrows */}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Room } from './Room'
 import { Cat } from '../characters/Cat'
 import { WashiTape } from '../ui/WashiTape'
@@ -11,12 +11,42 @@ interface CatRoomProps {
   roomIndex: number
   zoom?: number
   onEditStateChange?: (editing: boolean) => void
+  isActive?: boolean
 }
 
-export function CatRoom({ roomIndex, zoom, onEditStateChange }: CatRoomProps) {
+export function CatRoom({ roomIndex, zoom, onEditStateChange, isActive = false }: CatRoomProps) {
   const config = ROOMS[roomIndex]
   const cat    = getCatBySlug(config.catSlug ?? '') as CatType | null
   const [lightboxOpen, setLightboxOpen] = useState(false)
+
+  // Meow once on entry, then randomly every 10–20 s while the room is visible
+  useEffect(() => {
+    if (!isActive || !cat) return
+
+    const audio = new Audio(`/assets/sound/${cat.slug}-meow.mp3`)
+    audio.volume = 0.6
+
+    let timerId: ReturnType<typeof setTimeout>
+
+    const scheduleNext = () => {
+      const delay = (10 + Math.random() * 10) * 1000   // 10–20 s
+      timerId = setTimeout(() => {
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+        scheduleNext()
+      }, delay)
+    }
+
+    // Play immediately on room entry, then keep scheduling
+    audio.play().catch(() => {})
+    scheduleNext()
+
+    return () => {
+      clearTimeout(timerId)
+      audio.pause()
+      audio.src = ''
+    }
+  }, [isActive, cat?.slug])
 
   if (!cat) return null
 
@@ -54,7 +84,12 @@ export function CatRoom({ roomIndex, zoom, onEditStateChange }: CatRoomProps) {
           colorScheme={cat.colorScheme}
           size={cat.displaySize}
           x={55}
+          y={-10}
           delay="0s"
+          wander
+          wanderMin={20}
+          wanderMax={80}
+          wanderSpeed={3}
           onClick={() => setLightboxOpen(true)}
         />
       </Room>
