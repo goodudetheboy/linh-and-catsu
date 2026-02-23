@@ -53,7 +53,7 @@ export function RoomWorld() {
   }
 
   const metrics = useRoomScale(zoom)
-  const { slotWidth, vh, scaleFactor, canvasOffsetY } = metrics
+  const { slotWidth, vh, scaleFactor, canvasOffsetX, canvasOffsetY, scaledRoomWidth, vw } = metrics
   const { worldRef, roomIndex, linhScreenX } =
     useScrollEngine(ROOMS.length, editingSuspended, zoom)
 
@@ -64,6 +64,19 @@ export function RoomWorld() {
   const linhH      = LINH_NATURAL_H * scaleFactor
   // Her feet Y = canvas top + LINH_FEET_Y_FRAC of canvas height
   const linhFeetY  = canvasOffsetY + LINH_FEET_Y_FRAC * ROOM_HEIGHT * scaleFactor
+
+  /*
+   * Linh clip wrapper — a fixed container that exactly covers the canvas's
+   * horizontal footprint on screen.  overflow:hidden clips Linh when she
+   * walks off the canvas edge into the polka-dot gutter, eliminating the
+   * "exits outside the room border" glitch that appears at zoom < 1.
+   *
+   * Width = min(scaledRoomWidth, vw) so it never exceeds the viewport.
+   * Linh's screenX is already viewport-relative; we subtract canvasOffsetX
+   * so positions inside the wrapper are canvas-edge-relative.
+   */
+  const clipLeft  = canvasOffsetX
+  const clipWidth = Math.min(scaledRoomWidth, vw - canvasOffsetX)
 
   return (
     <>
@@ -88,12 +101,20 @@ export function RoomWorld() {
         </div>
       </div>
 
-      <Linh
-        screenX={linhScreenX}
-        screenY={linhFeetY}
-        width={linhW}
-        height={linhH}
-      />
+      {/* Clip wrapper — Linh is absolute inside here so overflow:hidden hides her
+          the moment she steps past the canvas border */}
+      <div
+        className="fixed pointer-events-none"
+        style={{ left: clipLeft, top: 0, width: clipWidth, height: vh, overflow: 'hidden', zIndex: 20 }}
+      >
+        <Linh
+          screenX={linhScreenX - clipLeft}
+          screenY={linhFeetY}
+          width={linhW}
+          height={linhH}
+        />
+      </div>
+
       <RoomIndicator current={roomIndex} />
       <ZoomSlider zoom={zoom} onChange={handleZoomChange} />
     </>

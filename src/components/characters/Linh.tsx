@@ -1,9 +1,9 @@
-/* Linh character — fixed overlay, fully driven by canvas metrics.
-   Uses the real sticker art (linh.png). */
+/* Linh character — rendered inside the canvas clip wrapper in RoomWorld.
+   All coordinates are relative to the clip wrapper (top-left = canvas left edge). */
 
 interface LinhProps {
-  screenX:  number  // px from left viewport edge (her horizontal center)
-  screenY:  number  // px from top viewport edge (her FEET — bottom of sprite)
+  screenX:  number  // px from clip-wrapper left edge (her horizontal center)
+  screenY:  number  // px from viewport top (her FEET — bottom of sprite)
   width:    number  // px
   height:   number  // px
 }
@@ -11,7 +11,7 @@ interface LinhProps {
 export function Linh({ screenX, screenY, width, height }: LinhProps) {
   return (
     <div
-      className="fixed z-20 pointer-events-none"
+      className="absolute pointer-events-none"
       style={{
         left:       screenX,
         top:        screenY - height,
@@ -19,6 +19,7 @@ export function Linh({ screenX, screenY, width, height }: LinhProps) {
         height,
         transform:  'translateX(-50%)',
         transition: 'none',
+        zIndex:     20,
       }}
     >
       <div

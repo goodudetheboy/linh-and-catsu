@@ -45,7 +45,7 @@ scaleFactor = (vh / ROOM_HEIGHT) * userZoom
             = (viewport height / 900) * userZoom
 ```
 
-`userZoom` defaults to 1.0 and is controlled by the zoom slider. GSAP tweens the zoom change smoothly at 60fps.
+`userZoom` defaults to **0.8** on desktop and **0.5** on mobile (detected via `pointer: coarse` media query). Controlled by the zoom slider. GSAP tweens the zoom change smoothly at 60fps.
 
 ### Derived values (see `useRoomScale.ts`)
 
@@ -115,19 +115,19 @@ applyPositions(room, linhPx, zoom)
 
 ## Linh Character (fixed overlay)
 
-Linh is **`position: fixed`**, rendered in `RoomWorld` as a single instance — NOT inside any room component.
+Linh is rendered in `RoomWorld` as a single instance — NOT inside any room component. She is **`position: absolute`** inside a **`position: fixed` clip wrapper**.
 
-**Why fixed:** She needs to animate across room transitions. If she were inside a room component, React's state batching would cause a 1-frame jag where the new room is on screen but Linh hasn't updated her room yet.
+**Why a clip wrapper:** At zoom < 1 the canvas is narrower than the viewport, leaving polka-dot gutters on the sides. Without clipping, Linh's GSAP exit/enter animations would visibly carry her into the gutter before snapping back. The fixed wrapper has `overflow: hidden` and its width matches the canvas footprint exactly (`min(scaledRoomWidth, vw)`), so Linh disappears cleanly the moment she steps past the canvas edge.
 
 **Size and position are derived entirely from canvas metrics:**
 ```typescript
 linhW     = 320 * scaleFactor          // scales with canvas
 linhH     = 560 * scaleFactor          // scales with canvas
-linhFeetY = canvasOffsetY + 0.88 * ROOM_HEIGHT * scaleFactor  // feet on canvas floor
-linhScreenX = (from useScrollEngine)   // horizontal, px from left
+linhFeetY = canvasOffsetY + 1.1 * ROOM_HEIGHT * scaleFactor  // feet on visual floor (10% below canvas bottom)
+linhScreenX = (from useScrollEngine)   // viewport-relative; wrapper-relative = linhScreenX - canvasOffsetX
 ```
 
-The `Linh` component takes `{ screenX, screenY, width, height }` all in screen px and renders `linh.png`.
+The `Linh` component takes `{ screenX, screenY, width, height }` — coordinates relative to its clip wrapper — and renders `linh.png`.
 
 ---
 
@@ -135,36 +135,47 @@ The `Linh` component takes `{ screenX, screenY, width, height }` all in screen p
 
 Each cat is an `<img>` sticker rendered inside the room canvas (absolute positioned). They share the `Cat` component which handles:
 - Bobbing animation (`bop-cat` keyframe)
+- Horizontal wandering via `requestAnimationFrame` loop
+- Image flip (`scaleX(-1)`) when walking left — applied on a separate wrapper div so it doesn't conflict with the `bop-cat` CSS animation which explicitly sets `scaleX(1)`
 - Drop shadow to match the sticker art style
-- Optional `onClick` → when provided, the cat becomes a clickable trigger (cursor: pointer, hover scale)
+- Optional `onClick` → when provided, the cat becomes a clickable trigger (cursor: pointer, hover scale) and plays that cat's meow sound
 
 ### Cat props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `x` | `number` | `50` | Horizontal position as % of room width (center anchor) |
-| `y` | `number` | `10` | Vertical position as % from room bottom (feet anchor) |
+| `y` | `number` | `-10` | % from room bottom. Negative = below canvas edge (clipped to floor). `-10` aligns feet with the visual floor, matching `LINH_FEET_Y_FRAC = 1.1` |
 | `size` | `number` | `1` | Scale multiplier on top of the base 440×440 image |
 | `delay` | `string` | `'0s'` | CSS animation delay for the bop cycle |
-| `onClick` | `() => void` | — | Makes the cat interactive (opens photo album) |
+| `flipX` | `boolean` | `false` | Start facing left (ri and bigga face left by default) |
+| `wander` | `boolean` | `false` | Enable horizontal wandering between `wanderMin`/`wanderMax` |
+| `wanderMin` | `number` | `x - 15` | Left bound for wander, % of room width |
+| `wanderMax` | `number` | `x + 15` | Right bound for wander, % of room width |
+| `wanderSpeed` | `number` | `3` | Walk speed in %/second |
+| `onClick` | `() => void` | — | Makes the cat interactive; plays meow + opens photo album |
 
 ### Welcome room per-cat positions (`WelcomeRoom.tsx`)
 
-`WELCOME_X`, `WELCOME_Y`, and `WELCOME_DELAY` records let you move each cat independently without touching the others:
+`WELCOME_X`, `WELCOME_Y`, `WELCOME_DELAY`, `WELCOME_FLIP`, and `WELCOME_WANDER_*` records let you tune each cat independently:
 
 ```typescript
-const WELCOME_X: Record<string, number> = { rua: 28, ri: 58, bigga: 72 }
-const WELCOME_Y: Record<string, number> = { rua: 10, ri: 10, bigga: 10 }
+const WELCOME_X:     Record<string, number>  = { rua: 28, ri: 58, bigga: 72 }
+const WELCOME_Y:     Record<string, number>  = { rua: -10, ri: -7, bigga: -10 }
+const WELCOME_FLIP:  Record<string, boolean> = { rua: false, ri: true, bigga: true }
+const WELCOME_WANDER_MIN:   { rua: 13, ri: 45, bigga: 60 }
+const WELCOME_WANDER_MAX:   { rua: 43, ri: 70, bigga: 88 }
+const WELCOME_WANDER_SPEED: { rua: 3.5, ri: 2.8, bigga: 3.2 }
 ```
 
-Edit `WELCOME_Y[slug]` to raise (`20`) or lower (`5`) a single cat on the welcome screen.
+Each cat wanders in its own horizontal zone so they don't overlap.
 
 ### Per-cat config — single source of truth in `src/data/cats.ts`
 
 ```typescript
-{ slug: 'rua',   colorScheme: 'orange', displaySize: 0.82 }
+{ slug: 'rua',   colorScheme: 'orange', displaySize: 1.00 }
 { slug: 'ri',    colorScheme: 'grey',   displaySize: 0.70 }
-{ slug: 'bigga', colorScheme: 'tabby',  displaySize: 1.25 }
+{ slug: 'bigga', colorScheme: 'tabby',  displaySize: 1.15 }
 ```
 
 `displaySize` is a CSS `scale()` multiplier applied on top of the base 440×440 canvas-px image. Changing it in `cats.ts` updates both the welcome screen and each cat's individual room simultaneously.
@@ -176,6 +187,10 @@ orange → /assets/characters/rua.png
 grey   → /assets/characters/ri.png
 tabby  → /assets/characters/bigga.png
 ```
+
+### Cat sounds (`public/assets/sound/`)
+
+Each cat has a dedicated meow file: `rua-meow.mp3`, `ri-meow.mp3`, `bigga-meow.mp3`. The sound plays when the user clicks the cat to open the photo album.
 
 ---
 
@@ -190,7 +205,8 @@ Clicking a cat character opens their **photo album lightbox**. The state is mana
 - **Grid view** — all photos in a 3-column polaroid grid. Thumbnails lift and zoom on hover.
 - **Full-screen viewer** — click any photo to open it. Polaroid-style framed photo with washi tape accent, caption, photo counter, ← → navigation arrows, keyboard shortcuts (←/→ navigate, Esc close).
 - **Upload** — auth-only "Add photos" button. Accepts multiple files, uploads to Supabase Storage.
-- **Delete** — auth-only ✕ button appears on thumbnail hover.
+- **Delete (grid)** — auth-only ✕ button appears on thumbnail hover.
+- **Delete (full-screen)** — auth-only 🗑️ button at the top-left corner of the polaroid frame (mirrors the ✕ close button at top-right). After deletion, navigates to the next photo or closes the viewer if it was the last one.
 
 ---
 
@@ -252,11 +268,11 @@ Room palettes defined in `src/data/rooms.ts` (`RoomConfig[]`). Adding a new room
 src/
   components/
     rooms/
-      RoomWorld.tsx        ← top-level: zoom state, world strip, single Linh
+      RoomWorld.tsx        ← top-level: zoom state, world strip, Linh clip wrapper
       Room.tsx             ← 3D CSS diorama shell + DnD context + edit button
       DecorationLayer.tsx  ← 2D overlay with placed items (pointer-events:none in view mode)
-      WelcomeRoom.tsx      ← room 0: all three cats displayed, sizes from CATS data
-      CatRoom.tsx          ← rooms 1–3: cat clickable → lightbox
+      WelcomeRoom.tsx      ← room 0: all three cats + nav hint sticky note + right-pointing arrow
+      CatRoom.tsx          ← rooms 1–3: wandering cat + meow on click + lightbox + pet-prompt note
       TogetherRoom.tsx     ← room 4
     builder/
       FurniturePanel.tsx   ← slide-up drawer, categorized items
@@ -264,10 +280,10 @@ src/
       PlacedItem.tsx       ← item in room with move/rotate/resize/delete handles
       BuilderToolbar.tsx   ← Save / Cancel bar
     characters/
-      Linh.tsx             ← fixed overlay, renders linh.png, takes { screenX, screenY, width, height }
-      Cat.tsx              ← absolute inside canvas, renders sticker PNG, bobbing animation, optional onClick
+      Linh.tsx             ← absolute inside clip wrapper, renders linh.png, takes { screenX, screenY, width, height }
+      Cat.tsx              ← absolute inside canvas, sticker PNG, bop + wander + flip, optional onClick+sound
     gallery/
-      Lightbox.tsx         ← grid view + full-screen viewer + upload/delete
+      Lightbox.tsx         ← grid view + full-screen viewer + upload + delete (grid hover + full-screen button)
     ui/
       WashiTape.tsx        ← decorative tape accent (color, angle props)
       RoomIndicator.tsx    ← dot nav
@@ -294,6 +310,8 @@ public/
   assets/
     characters/            ← linh.png, rua.png, ri.png, bigga.png
     furniture/             ← 28 SVG furniture items
+    sound/                 ← rua-meow.mp3, ri-meow.mp3, bigga-meow.mp3
+    misc/                  ← left-arrow-pink-no-bg.png, left-arrow-green-no-bg.png
 ```
 
 ---
@@ -315,13 +333,20 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [x] Fixed canvas system (1600×900) with responsive scaling
 - [x] Camera follow on narrow screens
 - [x] Zoom slider (0.35×–2.0×) with smooth GSAP tween, camera respects zoom
+- [x] Default zoom: 0.8× desktop, 0.5× mobile (detected via `pointer: coarse`)
 - [x] Outside-room cute polka-dot background + room frame border
-- [x] Linh character — real sticker art (`linh.png`), fixed overlay, scales with canvas
-- [x] Cat characters — real sticker art per cat, bobbing animation, click to open photos
+- [x] Linh character — real sticker art (`linh.png`), clip-wrapper overlay, scales with canvas
+- [x] Linh clip wrapper — `overflow: hidden` container sized to canvas footprint; eliminates "exits room border" glitch at zoom < 1
+- [x] Cat characters — real sticker art per cat, bobbing animation, click to open photos + play meow
+- [x] Cat horizontal wandering — rAF loop, per-cat speed/bounds, direction flip on reversal (`flipX` prop + separate wrapper div to avoid CSS animation conflict)
+- [x] Cat floor alignment — `y = -10` places feet at visual floor matching `LINH_FEET_Y_FRAC = 1.1`
+- [x] Cat initial direction — ri and bigga start facing left (`flipX = true`)
+- [x] Cat meow sounds — `rua-meow.mp3`, `ri-meow.mp3`, `bigga-meow.mp3` play on click
 - [x] Per-cat `displaySize` in `cats.ts` — single source of truth for welcome + cat rooms
 - [x] Room builder (drag-drop, move/rotate/resize/z-order, save to Supabase)
 - [x] Furniture catalog (28 items, placeholder SVGs)
 - [x] Photo album lightbox — grid, full-screen viewer, ←/→ navigation, upload, delete
+- [x] Delete in full-screen viewer — 🗑️ button mirrors ✕ close button; smart post-delete navigation
 - [x] Supabase auth (password-only login modal)
 - [x] Room indicator dots
 - [x] Supabase SQL setup script (`supabase-setup.sql`)
@@ -329,15 +354,15 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [x] Login-from-lightbox — "Login to add photos" button inside the album panel opens auth modal
 - [x] Mobile horizontal swipe — touch axis locked after 6 px; X-axis swipe navigates rooms, Y-axis walks Linh
 - [x] Custom favicon (`public/icon.png`)
-- [x] `Cat` component `y` prop — per-cat vertical position (% from bottom); welcome room uses `WELCOME_Y` record
 - [x] Room content lifted out of `preserve-3d` scene into a flat 2D overlay — fixes floor z-fighting with characters
 - [x] Room label card fixed (`position: absolute` inline style) — was stretching full-width due to `.paper-card { position: relative }` overriding Tailwind's `absolute` class
+- [x] Welcome room navigation hint — sticky note below title ("scroll down / swipe left to explore"), desktop vs mobile text via `pointer: coarse` detection; right-pointing arrow graphic (`left-arrow-pink-no-bg.png` rotated 180°) on right wall
+- [x] Cat room pet-prompt — sticky note on right wall ("psst... try petting {Name}!") with tack pin in room accent color
 
 ## What's Left
 
 - [ ] Design each room individually (colors, decor, mood)
 - [ ] Replace placeholder SVG furniture with real stylized art assets
-- [ ] Custom welcome room design (title, intro feel)
 - [ ] Decide on room 5 ("Together") purpose
 - [ ] Polish: loading states, error handling, mobile touch handle sizes
 - [ ] Deploy to Vercel
