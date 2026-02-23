@@ -15,10 +15,11 @@ const COLOR_SCHEME_MAP: Record<string, 'orange' | 'grey' | 'tabby'> = {
 
 interface CatRoomProps {
   roomIndex: number
+  zoom?: number
   onEditStateChange?: (editing: boolean) => void
 }
 
-export function CatRoom({ roomIndex, onEditStateChange }: CatRoomProps) {
+export function CatRoom({ roomIndex, zoom, onEditStateChange }: CatRoomProps) {
   const config = ROOMS[roomIndex]
   const cat    = getCatBySlug(config.catSlug ?? '') as CatType | null
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -29,7 +30,7 @@ export function CatRoom({ roomIndex, onEditStateChange }: CatRoomProps) {
 
   return (
     <>
-      <Room config={config} onEditStateChange={onEditStateChange}>
+      <Room config={config} zoom={zoom} onEditStateChange={onEditStateChange}>
         {/* Room label */}
         <div
           className="absolute top-[10%] left-[8%] paper-card px-6 py-3 paper-card--tilted-l"

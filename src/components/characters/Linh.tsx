@@ -1,20 +1,39 @@
 /* Placeholder 2D papercraft character for Linh.
+   Positioned as a fixed overlay, fully driven by canvas metrics so she
+   scales and moves with the room canvas at any zoom level.
    Replace the SVG innards with real art when ready — keep the outer wrapper. */
 
 interface LinhProps {
-  x?: number // % of viewport width
-  className?: string
+  screenX:  number  // px from left viewport edge (her horizontal center)
+  screenY:  number  // px from top viewport edge (her FEET — bottom of sprite)
+  width:    number  // px
+  height:   number  // px
 }
 
-export function Linh({ x = 50, className = '' }: LinhProps) {
+export function Linh({ screenX, screenY, width, height }: LinhProps) {
   return (
     <div
-      className={`fixed bottom-[18%] z-20 pointer-events-none ${className}`}
-      style={{ left: `${x}%`, transform: 'translateX(-50%)', transition: 'none' }}
+      className="fixed z-20 pointer-events-none"
+      style={{
+        left:       screenX,
+        top:        screenY - height,
+        width,
+        height,
+        transform:  'translateX(-50%)',
+        transition: 'none',
+      }}
     >
-      <div className="animate-bop drop-shadow-paper" style={{ width: 80, height: 160 }}>
+      <div
+        className="animate-bop drop-shadow-paper"
+        style={{ width: '100%', height: '100%' }}
+      >
         {/* ── Placeholder SVG character (swap for real art) ── */}
-        <svg viewBox="0 0 80 160" fill="none" xmlns="http://www.w3.org/2000/svg" width="80" height="160">
+        <svg
+          viewBox="0 0 80 160"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: '100%', height: '100%' }}
+        >
           {/* Body */}
           <rect x="22" y="70" width="36" height="55" rx="8" fill="#fcd5b0" stroke="#3d2c2c" strokeWidth="2"/>
           {/* Dress ruffle */}

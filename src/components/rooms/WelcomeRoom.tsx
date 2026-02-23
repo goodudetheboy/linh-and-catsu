@@ -4,14 +4,15 @@ import { WashiTape } from '../ui/WashiTape'
 import { ROOMS } from '../../data/rooms'
 
 interface WelcomeRoomProps {
+  zoom?: number
   onEditStateChange?: (editing: boolean) => void
 }
 
-export function WelcomeRoom({ onEditStateChange }: WelcomeRoomProps) {
+export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
   const config = ROOMS[0]
 
   return (
-    <Room config={config} onEditStateChange={onEditStateChange}>
+    <Room config={config} zoom={zoom} onEditStateChange={onEditStateChange}>
       {/* Title card */}
       <div
         className="absolute top-[12%] left-1/2 -translate-x-1/2 paper-card px-10 py-5 paper-card--tilted-l"

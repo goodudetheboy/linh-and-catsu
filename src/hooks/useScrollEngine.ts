@@ -1,37 +1,67 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
+import {
+  LINH_CENTER_PX,
+  LINH_LEFT_PX,
+  LINH_RIGHT_PX,
+  LINH_OFF_L_PX,
+  LINH_OFF_R_PX,
+} from '../data/constants'
+import { getRoomMetrics } from './useRoomScale'
 
 export const SCROLL_PER_ROOM = 1400
 
-// Linh's X positions as % of room width
-const X_CENTER = 50   // starting/center position
-const X_RIGHT  = 88   // right edge — triggers forward transition
-const X_LEFT   = 12   // left edge  — triggers backward transition
-const X_OFF_R  = 112  // off screen right
-const X_OFF_L  = -12  // off screen left
+function getCameraX(linhPx: number, zoom: number): number {
+  const m = getRoomMetrics(zoom)
+  if (!m.needsCamera) return 0
+  const linhScreenX = linhPx * m.scaleFactor
+  return Math.max(0, Math.min(m.scaledRoomWidth - m.vw, linhScreenX - m.vw / 2))
+}
 
-export function useScrollEngine(totalRooms: number, suspended: boolean) {
+export function useScrollEngine(totalRooms: number, suspended: boolean, userZoom: number) {
   const worldRef = useRef<HTMLDivElement>(null)
 
-  const [roomIndex, setRoomIndex] = useState(0)
-  const [linhX, setLinhX]         = useState(X_CENTER)
+  const [roomIndex, setRoomIndex]   = useState(0)
+  const [linhScreenX, setLinhScreenX] = useState(() => {
+    const m = getRoomMetrics(userZoom)
+    return m.canvasOffsetX + LINH_CENTER_PX * m.scaleFactor
+  })
 
-  // Internal refs — mutated without triggering re-renders
-  const currentRoomRef  = useRef(0)
-  const roomScrollRef   = useRef(0)           // 0 → SCROLL_PER_ROOM per room
-  const transitioning   = useRef(false)
-  const linhXRef        = useRef(X_CENTER)    // mirrors linhX state for GSAP tweens
+  const currentRoomRef = useRef(0)
+  const roomScrollRef  = useRef(SCROLL_PER_ROOM / 2)
+  const transitioning  = useRef(false)
+  const linhPxRef      = useRef(LINH_CENTER_PX)
+  const zoomRef        = useRef(userZoom)
 
-  // Sync both the ref and the state atomically
-  const moveLinh = (x: number) => {
-    linhXRef.current = x
-    setLinhX(x)
-  }
+  // Keep zoom ref fresh without re-running main effect
+  useEffect(() => { zoomRef.current = userZoom }, [userZoom])
+
+  // Stable applyPositions stored in a ref so other effects can call it
+  const applyRef = useRef<(room: number, linhPx: number, zoom?: number) => void>(() => {})
 
   useEffect(() => {
     if (suspended) return
 
-    // ── Shared transition builder ────────────────────────────────────
+    const applyPositions = (room: number, linhPx: number, zoom = zoomRef.current) => {
+      const m       = getRoomMetrics(zoom)
+      const cameraX = getCameraX(linhPx, zoom)
+      const worldX  = -(room * m.slotWidth + cameraX)
+      gsap.set(worldRef.current, { x: worldX })
+      const screenX = m.canvasOffsetX + linhPx * m.scaleFactor - cameraX
+      linhPxRef.current = linhPx
+      setLinhScreenX(screenX)
+    }
+
+    applyRef.current = applyPositions
+
+    const makeLinhTween = (from: number, to: number, duration: number, ease: string) => {
+      const proxy = { v: from }
+      return gsap.to(proxy, {
+        v: to, duration, ease,
+        onUpdate: () => applyPositions(currentRoomRef.current, proxy.v),
+      })
+    }
+
     const triggerTransition = (direction: 1 | -1) => {
       if (transitioning.current) return
       const targetRoom = currentRoomRef.current + direction
@@ -39,114 +69,83 @@ export function useScrollEngine(totalRooms: number, suspended: boolean) {
 
       transitioning.current = true
 
-      // Where Linh exits and enters from
-      const exitX  = direction ===  1 ? X_RIGHT  : X_LEFT
-      const exitOff= direction ===  1 ? X_OFF_R  : X_OFF_L
-      const enterOff=direction ===  1 ? X_OFF_L  : X_OFF_R
-      // After entering, roomScroll sits at the edge she came from
-      const enterScrollReset = direction === 1 ? 0 : SCROLL_PER_ROOM
-      const enterLinhX       = direction === 1 ? X_LEFT : X_RIGHT
+      const exitPx    = direction ===  1 ? LINH_RIGHT_PX : LINH_LEFT_PX
+      const exitOffPx = direction ===  1 ? LINH_OFF_R_PX : LINH_OFF_L_PX
+      const enterOff  = direction ===  1 ? LINH_OFF_L_PX : LINH_OFF_R_PX
+      const enterLand = direction ===  1 ? LINH_LEFT_PX  : LINH_RIGHT_PX
+      const enterScroll=direction ===  1 ? 0             : SCROLL_PER_ROOM
 
       const tl = gsap.timeline({
         onComplete: () => {
           currentRoomRef.current = targetRoom
           setRoomIndex(targetRoom)
-          // roomScroll at the edge she came in from — full room to walk
-          roomScrollRef.current = enterScrollReset
-
-          // Snap off screen, walk into position
-          linhXRef.current = enterOff
-          setLinhX(enterOff)
-          gsap.to(linhXRef, {
-            current: enterLinhX,
-            duration: 0.45,
-            ease: 'power2.out',
-            onUpdate: () => setLinhX(linhXRef.current),
-            onComplete: () => { transitioning.current = false },
-          })
+          roomScrollRef.current = enterScroll
+          applyPositions(targetRoom, enterOff)
+          makeLinhTween(enterOff, enterLand, 0.45, 'power2.out')
+            .then(() => { transitioning.current = false })
         },
       })
 
-      // 1. Linh walks briskly to the exit edge
-      tl.to(linhXRef, {
-        current: exitX,
-        duration: 0.2,
-        ease: 'power1.in',
-        onUpdate: () => setLinhX(linhXRef.current),
-      })
-      // 2. She strides off screen
-      tl.to(linhXRef, {
-        current: exitOff,
-        duration: 0.28,
-        ease: 'power2.in',
-        onUpdate: () => setLinhX(linhXRef.current),
-      })
-      // 3. Room slides (overlaps with her walking off)
-      tl.to(worldRef.current, {
-        x: `${-targetRoom * 100}vw`,
-        duration: 0.65,
-        ease: 'power3.inOut',
-      }, '-=0.18')
+      tl.add(makeLinhTween(linhPxRef.current, exitPx,    0.2,  'power1.in'))
+      tl.add(makeLinhTween(exitPx,            exitOffPx, 0.28, 'power2.in'))
+      tl.add(
+        gsap.to(worldRef.current, {
+          x: () => -(targetRoom * getRoomMetrics(zoomRef.current).slotWidth),
+          duration: 0.65,
+          ease: 'power3.inOut',
+        }),
+        '-=0.18',
+      )
     }
 
-    const goForward  = () => triggerTransition(1)
-    const goBackward = () => triggerTransition(-1)
+    const moveFromDelta = (dy: number) => {
+      if (transitioning.current) return
+      roomScrollRef.current = Math.max(0, Math.min(SCROLL_PER_ROOM, roomScrollRef.current + dy))
+      const progress = roomScrollRef.current / SCROLL_PER_ROOM
+      if (progress >= 1) { triggerTransition(1);  return }
+      if (progress <= 0) { triggerTransition(-1); return }
+      const linhPx = LINH_LEFT_PX + progress * (LINH_RIGHT_PX - LINH_LEFT_PX)
+      applyPositions(currentRoomRef.current, linhPx)
+    }
 
-    // ── Wheel handler ────────────────────────────────────────────────
     const onWheel = (e: WheelEvent) => {
       const target = e.target as HTMLElement
       if (target.closest('[data-furniture-panel]')) return
       e.preventDefault()
-      if (transitioning.current) return
-
-      roomScrollRef.current = Math.max(
-        0,
-        Math.min(SCROLL_PER_ROOM, roomScrollRef.current + e.deltaY * 0.85),
-      )
-
-      const progress = roomScrollRef.current / SCROLL_PER_ROOM  // 0 → 1
-
-      // Map progress 0→1 to Linh's X range (X_LEFT → X_RIGHT), centered at 0.5
-      const x = X_LEFT + progress * (X_RIGHT - X_LEFT)
-      moveLinh(x)
-
-      if (progress >= 1) { goForward();  return }
-      if (progress <= 0) { goBackward(); return }
+      moveFromDelta(e.deltaY * 0.85)
     }
 
-    // ── Touch support ────────────────────────────────────────────────
     let touchStartY = 0
     const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY }
     const onTouchMove  = (e: TouchEvent) => {
       e.preventDefault()
-      if (transitioning.current) return
-      const dy = touchStartY - e.touches[0].clientY
+      const dy = (touchStartY - e.touches[0].clientY) * 1.5
       touchStartY = e.touches[0].clientY
-      // Reuse wheel logic via synthetic delta
-      roomScrollRef.current = Math.max(
-        0,
-        Math.min(SCROLL_PER_ROOM, roomScrollRef.current + dy * 1.5),
-      )
-      const progress = roomScrollRef.current / SCROLL_PER_ROOM
-      moveLinh(X_LEFT + progress * (X_RIGHT - X_LEFT))
-      if (progress >= 1) goForward()
-      if (progress <= 0) goBackward()
+      moveFromDelta(dy)
     }
 
-    // Initial state: center of room
-    roomScrollRef.current = SCROLL_PER_ROOM / 2
-    moveLinh(X_CENTER)
+    const onResize = () => applyPositions(currentRoomRef.current, linhPxRef.current)
+
+    applyPositions(currentRoomRef.current, linhPxRef.current)
 
     window.addEventListener('wheel',      onWheel,      { passive: false })
     window.addEventListener('touchstart', onTouchStart, { passive: true })
     window.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    window.addEventListener('resize',     onResize)
 
     return () => {
       window.removeEventListener('wheel',      onWheel)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove',  onTouchMove)
+      window.removeEventListener('resize',     onResize)
     }
   }, [totalRooms, suspended])
 
-  return { worldRef, roomIndex, linhX }
+  // When zoom changes, reapply positions so camera and world X update immediately
+  useEffect(() => {
+    zoomRef.current = userZoom
+    applyRef.current?.(currentRoomRef.current, linhPxRef.current, userZoom)
+  }, [userZoom])
+
+  return { worldRef, roomIndex, linhScreenX }
 }
