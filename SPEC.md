@@ -45,7 +45,7 @@ scaleFactor = (vh / ROOM_HEIGHT) * userZoom
             = (viewport height / 900) * userZoom
 ```
 
-`userZoom` defaults to **0.8** on desktop and **0.5** on mobile (detected via `pointer: coarse` media query). Controlled by the zoom slider. GSAP tweens the zoom change smoothly at 60fps.
+`userZoom` defaults to **0.8** on desktop and **0.35** on mobile (detected via `pointer: coarse` media query). Controlled by the zoom slider. GSAP tweens the zoom change smoothly at 60fps.
 
 ### Derived values (see `useRoomScale.ts`)
 
@@ -300,7 +300,7 @@ src/
       WashiTape.tsx        ← decorative tape accent (color, angle props)
       RoomIndicator.tsx    ← dot nav
       LoginModal.tsx       ← password-only login
-      ZoomSlider.tsx       ← zoom range input + camera mode badge
+      ZoomSlider.tsx       ← zoom range input + camera mode badge; hidden by default, slides in from left edge via a sticky tab toggle
   hooks/
     useScrollEngine.ts     ← wheel/touch → virtual scroll → GSAP world+Linh
     useRoomScale.ts        ← scaleFactor, needsCamera, slotWidth, offsets
@@ -345,7 +345,8 @@ VITE_LINH_EMAIL=linh@example.com   ← Linh's Supabase auth email (hardcoded in 
 - [x] Fixed canvas system (1600×900) with responsive scaling
 - [x] Camera follow on narrow screens
 - [x] Zoom slider (0.35×–2.0×) with smooth GSAP tween, camera respects zoom
-- [x] Default zoom: 0.8× desktop, 0.5× mobile (detected via `pointer: coarse`)
+- [x] Default zoom: 0.8× desktop, 0.35× mobile (detected via `pointer: coarse`)
+- [x] Zoom slider hidden by default — a sticky tab button (magnifying-glass SVG, kawaii-themed, non-emoji) peeks from the left edge; clicking slides the full panel in/out with spring easing
 - [x] Outside-room cute polka-dot background + room frame border
 - [x] Linh character — real sticker art (`linh.png`), clip-wrapper overlay, scales with canvas
 - [x] Linh clip wrapper — `overflow: hidden` container sized to canvas footprint; eliminates "exits room border" glitch at zoom < 1
