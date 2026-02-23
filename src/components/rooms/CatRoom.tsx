@@ -7,12 +7,6 @@ import { ROOMS } from '../../data/rooms'
 import { getCatBySlug } from '../../data/cats'
 import type { Cat as CatType } from '../../data/cats'
 
-const COLOR_SCHEME_MAP: Record<string, 'orange' | 'grey' | 'tabby'> = {
-  rua:   'orange',
-  ri:    'grey',
-  bigga: 'tabby',
-}
-
 interface CatRoomProps {
   roomIndex: number
   zoom?: number
@@ -25,8 +19,6 @@ export function CatRoom({ roomIndex, zoom, onEditStateChange }: CatRoomProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
 
   if (!cat) return null
-
-  const colorScheme = COLOR_SCHEME_MAP[cat.slug] ?? 'orange'
 
   return (
     <>
@@ -51,26 +43,17 @@ export function CatRoom({ roomIndex, zoom, onEditStateChange }: CatRoomProps) {
           </p>
         </div>
 
-        {/* Open gallery button (always accessible in view mode) */}
-        <button
+        {/* Click the cat to open their album */}
+        <Cat
+          colorScheme={cat.colorScheme}
+          size={cat.displaySize}
+          x={55}
+          delay="0s"
           onClick={() => setLightboxOpen(true)}
-          className="absolute top-[10%] right-[8%] paper-card paper-card--tilted-r px-5 py-3 transition-all hover:scale-105 active:scale-95"
-          style={{
-            zIndex: 30,
-            boxShadow: '3px 4px 0 rgba(61,44,44,0.12)',
-            fontFamily: 'var(--font-hand)',
-            color: 'var(--ink)',
-            fontSize: 16,
-            cursor: 'pointer',
-          }}
-        >
-          📷 Photos
-        </button>
-
-        <Cat colorScheme={colorScheme} x={62} delay="0s" size={1.3} />
+        />
       </Room>
 
-      {lightboxOpen && cat && (
+      {lightboxOpen && (
         <Lightbox
           catSlug={cat.slug}
           catName={cat.name}

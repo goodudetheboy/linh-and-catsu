@@ -12,8 +12,8 @@ import { CatRoom } from './CatRoom'
 import { TogetherRoom } from './TogetherRoom'
 
 // Linh's natural dimensions on the room canvas at scale 1
-const LINH_NATURAL_W = 80
-const LINH_NATURAL_H = 160
+const LINH_NATURAL_W = 320
+const LINH_NATURAL_H = 560
 // Her feet sit at this fraction from the canvas top (= 1 - 0.18 floor offset - half character)
 const LINH_FEET_Y_FRAC = 0.88
 

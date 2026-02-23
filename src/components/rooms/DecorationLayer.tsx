@@ -46,7 +46,12 @@ export function DecorationLayer({
     <div
       ref={setRef}
       className="absolute inset-0 z-10"
-      style={{ cursor: isEditing ? 'crosshair' : 'default' }}
+      style={{
+        cursor:        isEditing ? 'crosshair' : 'default',
+        /* In view mode, pass clicks through to room children (e.g. PhotoAlbum).
+           Descendant PlacedItems can override this with pointer-events: auto. */
+        pointerEvents: isEditing ? 'auto' : 'none',
+      }}
       onClick={() => isEditing && onDeselect()}
     >
       {items.map((item) => (

@@ -2,10 +2,24 @@ import { Room } from './Room'
 import { Cat } from '../characters/Cat'
 import { WashiTape } from '../ui/WashiTape'
 import { ROOMS } from '../../data/rooms'
+import { CATS } from '../../data/cats'
 
 interface WelcomeRoomProps {
   zoom?: number
   onEditStateChange?: (editing: boolean) => void
+}
+
+/* X positions for the three cats on the welcome screen */
+const WELCOME_X: Record<string, number> = {
+  rua:   28,
+  ri:    58,
+  bigga: 72,
+}
+
+const WELCOME_DELAY: Record<string, string> = {
+  rua:   '0.3s',
+  ri:    '0.6s',
+  bigga: '0.1s',
 }
 
 export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
@@ -54,10 +68,16 @@ export function WelcomeRoom({ zoom, onEditStateChange }: WelcomeRoomProps) {
         </div>
       </div>
 
-      {/* Cats */}
-      <Cat colorScheme="orange" x={28} delay="0.3s" />
-      <Cat colorScheme="grey"   x={58} delay="0.6s" />
-      <Cat colorScheme="tabby"  x={72} delay="0.1s" />
+      {/* Cats — sizes/schemes come from CATS data, so one place to edit */}
+      {CATS.map((cat) => (
+        <Cat
+          key={cat.slug}
+          colorScheme={cat.colorScheme}
+          size={cat.displaySize}
+          x={WELCOME_X[cat.slug] ?? 50}
+          delay={WELCOME_DELAY[cat.slug] ?? '0s'}
+        />
+      ))}
     </Room>
   )
 }
